@@ -1,0 +1,78 @@
+<!-- Audit Log - Task 5.4 MANDATORY -->
+<div class="page-container">
+  <div class="page-header">
+    <h1 class="page-title">🔍 Audit Trail</h1>
+    <div class="header-actions">
+      <button class="btn btn-secondary" (click)="loadLogs()">↻ Refresh</button>
+      <a routerLink="/purchase" class="btn btn-outline">← Back to Bills</a>
+    </div>
+  </div>
+
+  @if (errorMessage) {
+    <div class="alert alert-error">{{ errorMessage }}</div>
+  }
+
+  @if (isLoading) {
+    <div class="loading-container">
+      <div class="spinner"></div><span>Loading audit logs...</span>
+    </div>
+  }
+
+  @if (!isLoading) {
+    <div class="section-card">
+      @if (logs.length === 0) {
+        <div class="empty-state">No audit log entries found.</div>
+      } @else {
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Entity</th>
+              <th>Action</th>
+              <th>Entity ID</th>
+              <th>Timestamp</th>
+              <th>Details</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (log of logs; track log.id) {
+              <tr>
+                <td class="mono">{{ log.id }}</td>
+                <td>{{ log.entity }}</td>
+                <td>
+                  <span class="action-badge" [class]="getActionClass(log.action)">
+                    {{ log.action }}
+                  </span>
+                </td>
+                <td>{{ log.entityId ?? '—' }}</td>
+                <td>{{ log.createdAt | date:'medium' }}</td>
+                <td>
+                  <button class="btn btn-sm btn-outline" (click)="toggleExpand(log.id)">
+                    {{ isExpanded(log.id) ? 'Hide' : 'View' }}
+                  </button>
+                </td>
+              </tr>
+
+              @if (isExpanded(log.id)) {
+                <tr class="detail-row">
+                  <td colspan="6">
+                    <div class="detail-grid">
+                      <div class="detail-panel">
+                        <div class="detail-label">Old Value</div>
+                        <pre class="json-pre">{{ formatJson(log.oldValue) }}</pre>
+                      </div>
+                      <div class="detail-panel">
+                        <div class="detail-label">New Value</div>
+                        <pre class="json-pre">{{ formatJson(log.newValue) }}</pre>
+                      </div>
+                    </div>
+                  </td>
+                </tr>
+              }
+            }
+          </tbody>
+        </table>
+      }
+    </div>
+  }
+</div>

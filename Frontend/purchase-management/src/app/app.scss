@@ -1,0 +1,49 @@
+/* ── Root App Styles ─────────────────────────────────────────────────────────── */
+
+/* Top Navigation Bar */
+.app-navbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 24px;
+  height: 52px;
+  background: #1e293b;
+  color: #fff;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+}
+
+.navbar-brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+
+  .brand-icon { font-size: 1.3rem; }
+  .brand-name { font-size: 1rem; font-weight: 700; letter-spacing: 0.02em; }
+}
+
+.navbar-links {
+  display: flex;
+  gap: 8px;
+}
+
+.nav-link {
+  padding: 6px 14px;
+  border-radius: 6px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #94a3b8;
+  text-decoration: none;
+  transition: all 0.15s;
+
+  &:hover { color: #fff; background: rgba(255,255,255,0.1); }
+  &.active { color: #fff; background: #1e40af; }
+}
+
+/* Main Content */
+.app-main {
+  min-height: calc(100vh - 52px);
+  background: #f8fafc;
+}

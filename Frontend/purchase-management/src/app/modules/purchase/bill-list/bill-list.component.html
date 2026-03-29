@@ -1,0 +1,115 @@
+<!-- Bill List - ERP-style layout with online/offline status indicator -->
+<div class="page-container">
+
+  <!-- Page Header -->
+  <div class="page-header">
+    <div class="header-left">
+      <h1 class="page-title">
+        <span class="title-icon">📋</span>
+        Purchase Bills
+      </h1>
+      <span class="connection-badge" [class.online]="isOnline" [class.offline]="!isOnline">
+        {{ isOnline ? '🟢 Online' : '🔴 Offline' }}
+      </span>
+    </div>
+    <div class="header-actions">
+      <!-- Manual sync button - visible when there are pending offline bills -->
+      @if (pendingCount > 0) {
+        <button class="btn btn-warning" (click)="syncNow()" [disabled]="isSyncing || !isOnline">
+          {{ isSyncing ? '⏳ Syncing...' : '🔄 Sync Now (' + pendingCount + ' pending)' }}
+        </button>
+      }
+      <a routerLink="/purchase/new" class="btn btn-primary">+ New Purchase Bill</a>
+    </div>
+  </div>
+
+  <!-- Error Alert -->
+  @if (errorMessage) {
+    <div class="alert alert-error">{{ errorMessage }}</div>
+  }
+
+  <!-- Loading Indicator -->
+  @if (isLoading) {
+    <div class="loading-container">
+      <div class="spinner"></div>
+      <span>Loading purchase bills...</span>
+    </div>
+  }
+
+  <!-- ─── Offline Bills Section ─────────────────────────────────────────── -->
+  @if (offlineBills.length > 0) {
+    <div class="section-card offline-section">
+      <h3 class="section-title">📴 Offline Saved Bills</h3>
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Offline ID</th>
+            <th>Saved At</th>
+            <th>Items Count</th>
+            <th>Sync Status</th>
+            <th>Server ID</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (bill of offlineBills; track bill.offlineId) {
+            <tr>
+              <td class="mono">{{ bill.offlineId.substring(0, 8) }}...</td>
+              <td>{{ bill.createdAt | date:'medium' }}</td>
+              <td>{{ bill.data.items.length }}</td>
+              <td>
+                <span class="status-badge" [class]="'status-' + bill.syncStatus.toLowerCase()">
+                  {{ bill.syncStatus }}
+                </span>
+              </td>
+              <td>{{ bill.serverId ?? '—' }}</td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+
+  <!-- ─── Server Bills Table ─────────────────────────────────────────────── -->
+  @if (!isLoading) {
+    <div class="section-card">
+      <h3 class="section-title">Purchase Bills</h3>
+      @if (bills.length === 0) {
+        <div class="empty-state">
+          <p>No purchase bills found. <a routerLink="/purchase/new">Create the first one.</a></p>
+        </div>
+      } @else {
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Bill No.</th>
+              <th>Bill Date</th>
+              <th>Status</th>
+              <th class="text-right">Total Items</th>
+              <th class="text-right">Total Qty</th>
+              <th class="text-right">Total Amount</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (bill of bills; track bill.id) {
+              <tr class="table-row">
+                <td class="bill-number">{{ bill.billNumber }}</td>
+                <td>{{ bill.billDate | date:'mediumDate' }}</td>
+                <td>
+                  <span class="status-badge status-saved">{{ bill.status }}</span>
+                </td>
+                <td class="text-right">{{ bill.totalItems }}</td>
+                <td class="text-right">{{ bill.totalQuantity | number:'1.2-2' }}</td>
+                <td class="text-right amount">{{ bill.totalAmount | number:'1.2-2' }}</td>
+                <td class="actions-cell">
+                  <a [routerLink]="['/purchase/edit', bill.id]" class="btn btn-sm btn-secondary">Edit</a>
+                  <button class="btn btn-sm btn-outline" (click)="exportPdf(bill.id)">PDF</button>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      }
+    </div>
+  }
+</div>

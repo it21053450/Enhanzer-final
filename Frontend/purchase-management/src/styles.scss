@@ -1,0 +1,35 @@
+/* ── Global Styles: Purchase Management ERP ────────────────────────────────── */
+
+/* Reset */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  font-size: 14px;
+  color: #1e293b;
+  background: #f8fafc;
+  line-height: 1.5;
+}
+
+/* Scrollbar styling */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: #f1f5f9; }
+::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+
+/* Typography */
+h1, h2, h3 { font-weight: 700; color: #1e293b; }
+
+/* Links */
+a { color: #1e40af; text-decoration: none; }
+a:hover { text-decoration: underline; }
+
+/* Input base */
+input, select, textarea {
+  font-family: inherit;
+  font-size: inherit;
+}
+
+/* Number inputs: hide spin buttons for cleaner look */
+input[type='number']::-webkit-inner-spin-button,
+input[type='number']::-webkit-outer-spin-button { opacity: 0.4; }

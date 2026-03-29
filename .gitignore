@@ -1,0 +1,23 @@
+# ── .NET Backend ────────────────────────────────────────────────────────────
+Backend/**/bin/
+Backend/**/obj/
+Backend/**/*.user
+Backend/**/*.suo
+Backend/.vs/
+Backend/**/appsettings.Development.json
+
+# ── Angular Frontend ─────────────────────────────────────────────────────────
+Frontend/**/node_modules/
+Frontend/**/.angular/
+Frontend/**/dist/
+Frontend/**/.sass-cache/
+
+# ── Visual Studio ────────────────────────────────────────────────────────────
+.vs/
+**/.vs/
+
+# ── OS / Editor ──────────────────────────────────────────────────────────────
+.DS_Store
+Thumbs.db
+.vscode/
+*.log

@@ -1,0 +1,74 @@
+/* Audit Log Styles */
+.page-container { padding: 24px; max-width: 1200px; margin: 0 auto; }
+
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+  .header-actions { display: flex; gap: 10px; }
+}
+
+.page-title { font-size: 1.5rem; font-weight: 700; color: #1e293b; margin: 0; }
+
+.section-card {
+  background: #fff;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 20px;
+}
+
+.data-table {
+  width: 100%; border-collapse: collapse;
+  th {
+    background: #f8fafc; padding: 10px 12px; text-align: left;
+    font-size: 0.8rem; font-weight: 600; color: #64748b;
+    border-bottom: 2px solid #e2e8f0; text-transform: uppercase;
+  }
+  td { padding: 12px; border-bottom: 1px solid #f1f5f9; font-size: 0.875rem; color: #374151; }
+  tr:hover td { background: #f8fafc; }
+  .mono { font-family: monospace; }
+}
+
+.action-badge {
+  padding: 3px 8px; border-radius: 10px; font-size: 0.75rem; font-weight: 700;
+  &.action-create { background: #dcfce7; color: #166534; }
+  &.action-update { background: #fef3c7; color: #92400e; }
+}
+
+.detail-row td { background: #f8fafc !important; padding: 16px 12px !important; }
+
+.detail-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+
+.detail-panel {
+  .detail-label {
+    font-size: 0.75rem; font-weight: 700; color: #64748b; text-transform: uppercase; margin-bottom: 6px;
+  }
+}
+
+.json-pre {
+  background: #1e293b; color: #e2e8f0; padding: 12px; border-radius: 6px;
+  font-size: 0.75rem; overflow-x: auto; max-height: 200px; margin: 0;
+}
+
+.empty-state { text-align: center; padding: 40px; color: #94a3b8; }
+
+.loading-container { display: flex; align-items: center; gap: 12px; padding: 40px; justify-content: center; color: #64748b; }
+
+.spinner {
+  width: 24px; height: 24px; border: 3px solid #e2e8f0; border-top-color: #1e40af;
+  border-radius: 50%; animation: spin 0.8s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+.alert { padding: 12px 16px; border-radius: 6px; margin-bottom: 16px; font-size: 0.875rem;
+  &.alert-error { background: #fee2e2; color: #991b1b; border: 1px solid #fca5a5; }
+}
+
+.btn {
+  padding: 8px 16px; border-radius: 6px; font-size: 0.875rem; font-weight: 500; cursor: pointer;
+  border: 1px solid transparent; text-decoration: none; display: inline-flex; align-items: center; gap: 6px;
+  &.btn-secondary { background: #e2e8f0; color: #374151; &:hover { background: #cbd5e1; } }
+  &.btn-outline   { background: transparent; color: #1e40af; border-color: #1e40af; &:hover { background: #eff6ff; } }
+  &.btn-sm        { padding: 5px 10px; font-size: 0.8rem; }
+}

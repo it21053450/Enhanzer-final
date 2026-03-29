@@ -1,0 +1,25 @@
+<!-- 
+  Root App Component - Navigation layout
+  Provides a top nav bar + main content area with router outlet
+-->
+
+<!-- Top Navigation Bar -->
+<nav class="app-navbar">
+  <div class="navbar-brand">
+    <span class="brand-icon">🏢</span>
+    <span class="brand-name">{{ appTitle }}</span>
+  </div>
+  <div class="navbar-links">
+    <a routerLink="/purchase" routerLinkActive="active" class="nav-link">
+      📋 Purchase Bills
+    </a>
+    <a routerLink="/audit-logs" routerLinkActive="active" class="nav-link">
+      🔍 Audit Trail
+    </a>
+  </div>
+</nav>
+
+<!-- Main Content Area -->
+<main class="app-main">
+  <router-outlet />
+</main>
