@@ -25,7 +25,7 @@ import {
   AbstractControl,
   ReactiveFormsModule
 } from '@angular/forms';
-import { debounceTime, distinctUntilChanged, Subject, takeUntil } from 'rxjs';
+import { debounceTime, distinctUntilChanged, forkJoin, Subject, takeUntil } from 'rxjs';
 import { ApiService } from '../../../services/api.service';
 import { OfflineService } from '../../../services/offline.service';
 import { PdfService } from '../../../services/pdf.service';
@@ -89,16 +89,14 @@ export class BillFormComponent implements OnInit, OnDestroy {
 
   ngOnInit(): void {
     this.initForm();
-    this.loadMasterData();
 
     // Determine create vs. edit mode from route param
     const id = this.route.snapshot.paramMap.get('id');
     if (id) {
       this.editBillId = +id;
-      this.loadBillForEdit(this.editBillId);
+      this.loadEditData(this.editBillId);
     } else {
-      // New bill: start with one empty row
-      this.addRow();
+      this.loadCreateData();
     }
   }
 
@@ -120,64 +118,74 @@ export class BillFormComponent implements OnInit, OnDestroy {
 
   // ── Master Data Loading ─────────────────────────────────────────────────────
 
-  private loadMasterData(): void {
+  /** Create mode: load items + locations together, then add one blank row */
+  private loadCreateData(): void {
     this.isLoading = true;
-
-    // Load items for autocomplete
-    this.apiService.getItems()
-      .pipe(takeUntil(this.destroy$))
-      .subscribe({
-        next: (data) => { this.items = data; this.isLoading = false; },
-        error: () => { this.errorMessage = 'Failed to load items.'; this.isLoading = false; }
-      });
-
-    // Load locations for Batch dropdown
-    this.apiService.getLocations()
-      .pipe(takeUntil(this.destroy$))
-      .subscribe({
-        next: (data) => this.locations = data,
-        error: () => this.errorMessage = 'Failed to load locations.'
-      });
+    forkJoin({
+      items: this.apiService.getItems(),
+      locations: this.apiService.getLocations()
+    }).pipe(takeUntil(this.destroy$)).subscribe({
+      next: ({ items, locations }) => {
+        this.items = items;
+        this.locations = locations;
+        this.isLoading = false;
+        this.addRow(); // start with one blank row
+      },
+      error: () => {
+        this.errorMessage = 'Failed to load master data.';
+        this.isLoading = false;
+      }
+    });
   }
 
   // ── Edit Mode ───────────────────────────────────────────────────────────────
 
-  /** Loads an existing purchase bill and pre-fills the form for editing (Task 5.2) */
-  private loadBillForEdit(id: number): void {
+  /**
+   * Edit mode: load items, locations, AND the bill all at once with forkJoin.
+   * Populating the form only after all three responses arrive eliminates the
+   * race condition where bill rows were added before locations were ready.
+   */
+  private loadEditData(id: number): void {
     this.isLoadingBill = true;
-    this.apiService.getPurchaseBillById(id)
-      .pipe(takeUntil(this.destroy$))
-      .subscribe({
-        next: (bill) => {
-          this.loadedBill = bill;
-          this.savedBillNumber = bill.billNumber;
+    forkJoin({
+      items: this.apiService.getItems(),
+      locations: this.apiService.getLocations(),
+      bill: this.apiService.getPurchaseBillById(id)
+    }).pipe(takeUntil(this.destroy$)).subscribe({
+      next: ({ items, locations, bill }) => {
+        this.items = items;
+        this.locations = locations;
+        this.loadedBill = bill;
+        this.savedBillNumber = bill.billNumber;
 
-          // Fill header fields
-          this.form.patchValue({
-            billDate: new Date(bill.billDate).toISOString().substring(0, 10),
-            notes: bill.notes || ''
-          });
+        // Fill header fields
+        this.form.patchValue({
+          billDate: new Date(bill.billDate).toISOString().substring(0, 10),
+          notes: bill.notes ?? ''
+        });
 
-          // Fill line items
-          bill.items.forEach(item => {
+        // Fill line items — locations are guaranteed to be loaded here
+        bill.items
+          .sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0))
+          .forEach(item => {
             this.addRow({
-              itemId: item.itemId,
-              itemName: item.itemName,
-              locationId: item.locationId,
-              cost: item.cost,
-              price: item.price,
-              quantity: item.quantity,
+              itemId:          item.itemId,
+              itemName:        item.itemName ?? '',
+              locationId:      item.locationId,
+              cost:            item.cost,
+              price:           item.price,
+              quantity:        item.quantity,
               discountPercent: item.discountPercent
             });
           });
 
-          this.isLoadingBill = false;
-        },
-        error: () => {
-          this.errorMessage = 'Failed to load purchase bill for editing.';
-          this.isLoadingBill = false;
-        }
-      });
+        this.isLoadingBill = false;
+      },
+      error: () => {
+        this.errorMessage = 'Failed to load purchase bill for editing.';
+        this.isLoadingBill = false;
+      }
+    });
   }
 
   // ── FormArray (Line Items) ──────────────────────────────────────────────────
