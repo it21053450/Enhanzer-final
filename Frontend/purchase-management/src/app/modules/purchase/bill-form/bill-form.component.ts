@@ -25,7 +25,7 @@ import {
   AbstractControl,
   ReactiveFormsModule
 } from '@angular/forms';
-import { debounceTime, distinctUntilChanged, forkJoin, Subject, takeUntil } from 'rxjs';
+import { debounceTime, distinctUntilChanged, finalize, forkJoin, Subject, takeUntil } from 'rxjs';
 import { ApiService } from '../../../services/api.service';
 import { OfflineService } from '../../../services/offline.service';
 import { PdfService } from '../../../services/pdf.service';
@@ -124,16 +124,17 @@ export class BillFormComponent implements OnInit, OnDestroy {
     forkJoin({
       items: this.apiService.getItems(),
       locations: this.apiService.getLocations()
-    }).pipe(takeUntil(this.destroy$)).subscribe({
+    }).pipe(
+      takeUntil(this.destroy$),
+      finalize(() => { this.isLoading = false; })
+    ).subscribe({
       next: ({ items, locations }) => {
         this.items = items;
         this.locations = locations;
-        this.isLoading = false;
-        this.addRow(); // start with one blank row
+        this.addRow();
       },
       error: () => {
-        this.errorMessage = 'Failed to load master data.';
-        this.isLoading = false;
+        this.errorMessage = 'Failed to load master data. Is the backend running?';
       }
     });
   }
@@ -151,39 +152,46 @@ export class BillFormComponent implements OnInit, OnDestroy {
       items: this.apiService.getItems(),
       locations: this.apiService.getLocations(),
       bill: this.apiService.getPurchaseBillById(id)
-    }).pipe(takeUntil(this.destroy$)).subscribe({
+    }).pipe(
+      takeUntil(this.destroy$),
+      finalize(() => { this.isLoadingBill = false; })   // always clears spinner
+    ).subscribe({
       next: ({ items, locations, bill }) => {
-        this.items = items;
-        this.locations = locations;
-        this.loadedBill = bill;
-        this.savedBillNumber = bill.billNumber;
+        try {
+          this.items = items;
+          this.locations = locations;
+          this.loadedBill = bill;
+          this.savedBillNumber = bill.billNumber ?? '';
 
-        // Fill header fields
-        this.form.patchValue({
-          billDate: new Date(bill.billDate).toISOString().substring(0, 10),
-          notes: bill.notes ?? ''
-        });
+          // Fill header fields
+          const dateStr = bill.billDate
+            ? new Date(bill.billDate).toISOString().substring(0, 10)
+            : new Date().toISOString().substring(0, 10);
+          this.form.patchValue({ billDate: dateStr, notes: bill.notes ?? '' });
 
-        // Fill line items — locations are guaranteed to be loaded here
-        bill.items
-          .sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0))
-          .forEach(item => {
-            this.addRow({
-              itemId:          item.itemId,
-              itemName:        item.itemName ?? '',
-              locationId:      item.locationId,
-              cost:            item.cost,
-              price:           item.price,
-              quantity:        item.quantity,
-              discountPercent: item.discountPercent
+          // Fill line items — locations are guaranteed loaded at this point
+          const lineItems = Array.isArray(bill.items) ? bill.items : [];
+          lineItems
+            .sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0))
+            .forEach(item => {
+              this.addRow({
+                itemId:          item.itemId,
+                itemName:        item.itemName ?? '',
+                locationId:      item.locationId,
+                cost:            +(item.cost   ?? 0),
+                price:           +(item.price  ?? 0),
+                quantity:        +(item.quantity ?? 1),
+                discountPercent: +(item.discountPercent ?? 0)
+              });
             });
-          });
-
-        this.isLoadingBill = false;
+        } catch (err) {
+          console.error('Error populating edit form:', err);
+          this.errorMessage = 'Error loading bill data into form. See console for details.';
+        }
       },
-      error: () => {
-        this.errorMessage = 'Failed to load purchase bill for editing.';
-        this.isLoadingBill = false;
+      error: (err) => {
+        console.error('loadEditData HTTP error:', err);
+        this.errorMessage = 'Failed to load purchase bill. Is the backend running?';
       }
     });
   }
