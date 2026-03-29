@@ -14,7 +14,7 @@
  *   - Edit mode: loads existing bill and pre-fills all fields
  */
 
-import { Component, OnInit, OnDestroy } from '@angular/core';
+import { ChangeDetectorRef, Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import {
@@ -84,7 +84,8 @@ export class BillFormComponent implements OnInit, OnDestroy {
     private offlineService: OfflineService,
     private pdfService: PdfService,
     private route: ActivatedRoute,
-    private router: Router
+    private router: Router,
+    private cdr: ChangeDetectorRef
   ) {}
 
   ngOnInit(): void {
@@ -153,8 +154,7 @@ export class BillFormComponent implements OnInit, OnDestroy {
       locations: this.apiService.getLocations(),
       bill: this.apiService.getPurchaseBillById(id)
     }).pipe(
-      takeUntil(this.destroy$),
-      finalize(() => { this.isLoadingBill = false; })   // always clears spinner
+      takeUntil(this.destroy$)
     ).subscribe({
       next: ({ items, locations, bill }) => {
         try {
@@ -186,12 +186,18 @@ export class BillFormComponent implements OnInit, OnDestroy {
             });
         } catch (err) {
           console.error('Error populating edit form:', err);
-          this.errorMessage = 'Error loading bill data into form. See console for details.';
+          this.errorMessage = 'Error loading bill data. See browser console for details.';
+        } finally {
+          // Always clear the spinner and force Angular to re-render
+          this.isLoadingBill = false;
+          this.cdr.detectChanges();
         }
       },
       error: (err) => {
         console.error('loadEditData HTTP error:', err);
         this.errorMessage = 'Failed to load purchase bill. Is the backend running?';
+        this.isLoadingBill = false;
+        this.cdr.detectChanges();
       }
     });
   }
